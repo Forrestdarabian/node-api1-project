@@ -20,6 +20,10 @@ server.post("/api/users", (req, res) => {
     .then(idObject => db.findById(idObject.id))
     .then(user => {
       res.status(201).json(user);
+    })
+    .catch(err => {
+      console.log(err);
+      res.status(500).json({ error: "server error retrieving user" });
     });
 });
 server.get("/api/users/:id", (req, res) => {
@@ -38,5 +42,13 @@ server.get("/api/users/:id", (req, res) => {
       res.status(500).json({ error: "The users info could not be retrieved" });
     });
 });
-
+server.delete("/api/users/:id", (req, res) => {
+  const { id } = req.params;
+  db.remove(id)
+    .then(() => res.status(204).end())
+    .catch(err => {
+      console.log(err);
+      res.status(500).json({ error: "server error deleting" });
+    });
+});
 server.listen(8000, () => console.log("server is running!!!"));
