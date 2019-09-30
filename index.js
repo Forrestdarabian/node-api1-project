@@ -2,7 +2,7 @@
 const express = require("express");
 const db = require("./data/db.js");
 const server = express();
-
+server.use(express.json());
 server.get("/api/users", (req, res) => {
   db.find()
     .then(users => res.status(200).json(users))
@@ -13,8 +13,17 @@ server.get("/api/users", (req, res) => {
         .json({ error: "The users information could not be retrieved." });
     });
 });
+server.post("/api/users", (req, res) => {
+  console.log(req.body);
+  const user = req.body;
+  db.insert(user)
+    .then(idObject => db.findById(idObject.id))
+    .then(user => {
+      res.status(201).json(user);
+    });
+});
 server.get("/api/users/:id", (req, res) => {
-  const id = req.params.id;
+  const { id } = req.params;
   db.findById(id)
     .then(user => {
       console.log("user", user);
@@ -26,7 +35,7 @@ server.get("/api/users/:id", (req, res) => {
     })
     .catch(err => {
       console.log(err);
-      res.status(500).json({ error: "The user info could not be retrieved" });
+      res.status(500).json({ error: "The users info could not be retrieved" });
     });
 });
 
