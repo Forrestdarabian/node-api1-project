@@ -15,16 +15,26 @@ server.get("/api/users", (req, res) => {
 });
 server.post("/api/users", (req, res) => {
   console.log(req.body);
-  const user = req.body;
-  db.insert(user)
-    .then(idObject => db.findById(idObject.id))
-    .then(user => {
-      res.status(201).json(user);
-    })
-    .catch(err => {
-      console.log(err);
-      res.status(500).json({ error: "server error retrieving user" });
-    });
+  const { name, bio } = req.body;
+  if (!name || !bio) {
+    res.status(400).json({ error: "Requires name and bio" });
+  } else {
+    db.insert({ name, bio })
+      .then(({ id }) => {
+        db.findById(id)
+          .then(user => {
+            res.status(201).json(user);
+          })
+          .catch(err => {
+            console.log(err);
+            res.status(500).json({ error: "server error retrieving user" });
+          });
+      })
+      .catch(err => {
+        console.log(err);
+        res.status(500).json({ error: "server error inserting user" });
+      });
+  }
 });
 server.get("/api/users/:id", (req, res) => {
   const { id } = req.params;
@@ -49,6 +59,30 @@ server.delete("/api/users/:id", (req, res) => {
     .catch(err => {
       console.log(err);
       res.status(500).json({ error: "server error deleting" });
+    });
+});
+server.put("/api/users/:id", (req, res) => {
+  const { id } = req.params;
+  const { name, bio } = req.body;
+  if (!name && !bio) {
+    res.status(400).json({ error: "Error" });
+  }
+  db.update(id, { name, bio })
+    .then(updated => {
+      if (updated) {
+        db.findById(id)
+          .then(user => res.status(200).json(user))
+          .catch(err => {
+            console.log(err);
+            res.status(500).json({ error: `User with id ${id} not found` });
+          });
+      } else {
+        res.status(404).json({ error: `User with id ${id} not found` });
+      }
+    })
+    .catch(err => {
+      console.log(err);
+      res.status(500).json({ error: "Error updating user" });
     });
 });
 server.listen(8000, () => console.log("server is running!!!"));
